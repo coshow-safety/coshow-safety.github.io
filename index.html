@@ -126,6 +126,7 @@ textarea{min-height:96px;line-height:1.5}
 .stbtn{display:flex;gap:6px;margin-top:10px}
 .stbtn button{flex:1;padding:9px 0;border-radius:10px;border:1px solid #2e3e62;background:#0c1428;color:#c3cee3;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
 .stbtn button.on{border-color:transparent}
+.stbtn button.del{flex:none;padding:9px 16px;background:transparent;color:#ff8f87;border-color:rgba(255,90,78,.45)}
 main.wide{max-width:1280px}
 .bsum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .bsum div{border-radius:14px;padding:10px 6px;text-align:center;font-size:13px;font-weight:700}
@@ -387,7 +388,7 @@ function renderRec(){
       <div class="txt">${esc(r['내용'])}</div>
       <div class="meta"><span>🕒 ${esc(r['접수시각'])}</span><span>✍️ ${esc(r['기록자'])}</span>${re?`<span class="${over?'over':''}">⏰ 재확인 ${esc(re)}${over?' 지남':''}</span>`:''}</div></div>${thumb(r)}</div>
       ${r['상태']==='완료' ? `<div class="done-info">✅ 완료 ${esc(r['완료시각']||'')}${r['조치']?` · 🛠 ${esc(r['조치'])}`:''}</div>` : ''}
-      <div class="stbtn" onclick="event.stopPropagation()">${['접수','처리중','완료'].map(s=>`<button class="${s===r['상태']?'on s-'+s:''}" onclick="setSt('${esc(r['ID'])}','${s}')">${s}</button>`).join('')}</div>
+      <div class="stbtn" onclick="event.stopPropagation()">${['접수','처리중','완료'].map(s=>`<button class="${s===r['상태']?'on s-'+s:''}" onclick="setSt('${esc(r['ID'])}','${s}')">${s}</button>`).join('')}${D.admin ? `<button class="del" onclick="listDel('${esc(r['ID'])}',this)">🗑</button>` : ''}</div>
     </div>`;
   });
   $('#main').innerHTML = h;
@@ -489,6 +490,13 @@ async function delRec(id){
   b.disabled = true; b.textContent = '지우는 중…';
   try { await run('delRec', PW, id, ME); toast('🗑 삭제됨'); D = norm(await run('loadAll', PW)); closeSheet(); }
   catch (e) { toast('❌ ' + (e.message || e)); b.disabled = false; b.dataset.ok = ''; b.textContent = '🗑 이 기록 삭제 (관리자)'; }
+}
+// 목록에서 바로 삭제(관리자): 두 번 눌러야 지워짐. 지운 기록은 시트 「삭제기록」 탭에 남음
+async function listDel(id, b){
+  if (!b.dataset.ok) { b.dataset.ok = '1'; b.textContent = '한 번 더'; setTimeout(() => { if (b.isConnected) { b.dataset.ok = ''; b.textContent = '🗑'; } }, 4000); return; }
+  b.disabled = true; b.textContent = '…';
+  try { await run('delRec', PW, id, ME); toast('🗑 삭제됨'); D = norm(await run('loadAll', PW)); render(); }
+  catch (e) { toast('❌ ' + (e.message || e)); b.disabled = false; b.dataset.ok = ''; b.textContent = '🗑'; }
 }
 function openRec(id){
   const r = D.rec.find(x=>x['ID']===id); if (!r) return; NEWP = [];
