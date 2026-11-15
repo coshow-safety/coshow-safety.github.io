@@ -537,7 +537,7 @@ function rv(v){ REGV = v; LS.set('sr_regv', v); $('#main').classList.toggle('wid
 function renderReg(){
   if (!D.plan) { $('#main').innerHTML = '<div class="empty"><i>⏳</i>서버가 아직 옛 버전이에요</div>'; return; }
   $('#main').classList.toggle('wide', REGV === 'board');
-  const sw = `<div class="rsw"><button class="${REGV==='board'?'on':''}" onclick="rv('board')">📈 등록현황판</button><button class="${REGV==='in'?'on':''}" onclick="rv('in')">✍️ 입장 수 넣기</button></div>`;
+  const sw = `<div class="rsw"><button class="${REGV==='board'?'on':''}" onclick="rv('board')">📈 등록현황판</button><button class="${REGV==='in'?'on':''}" onclick="rv('in')">✍️ 등록 수 넣기</button></div>`;
   $('#main').innerHTML = sw + (REGV === 'board' ? regBoard() : regIn());
   if (REGV === 'in') { rKind(RIK, true); regList(); }
 }
@@ -547,7 +547,7 @@ function regBoard(){
   const by = k => reg.filter(r => r['구분'] === k);
   let h = '<div class="filters">' + ['전체'].concat(RDAYS).map(d => `<button class="${REGD===d?'on':''}" onclick="REGD='${d}';render()">${d==='전체'?'전체 기간':RDN[d]}<b>${rSum((D.reg||[]).filter(r => d==='전체' || r['날짜']===d))}</b></button>`).join('') + '</div>';
   h += issCard();
-  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 입장 (등록데스크 입력)</div><div class="big">${rSum(reg).toLocaleString()}<small>명</small></div>
+  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 등록 (등록데스크 입력)</div><div class="big">${rSum(reg).toLocaleString()}<small>명</small></div>
     <div class="sub">${RK.map(k => `<span>${k} ${rSum(by(k)).toLocaleString()}</span>`).join('')}</div></div><div class="rgrid">`;
   RK.forEach(k => {
     const now = rSum(by(k)), pl = plan.filter(r => r['구분'] === k && (k === '일반' || f(r))), pre = rSum(pl);
@@ -559,15 +559,15 @@ function regBoard(){
       const pc = pre ? Math.round(now / pre * 100) : 0;
       sub = `<div class="pbar"><i style="width:${Math.min(100, pc)}%"></i></div><div class="vs">신청 ${pre.toLocaleString()}명 중 ${pc}% · 도착 ${ok}/${pl.length}${k==='단체'?'곳':'개 대회'}</div>`;
     }
-    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}<span>${by(k).length}번 입력</span></h3><div class="big">${now.toLocaleString()}<small>명 입장</small></div>${sub}</div>`;
+    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}<span>${by(k).length}번 입력</span></h3><div class="big">${now.toLocaleString()}<small>명 등록</small></div>${sub}</div>`;
   });
   h += '</div>';
   if (REGD === '전체') {
     const m = {}; RDAYS.forEach(d => m[RDN[d]] = rSum((D.reg||[]).filter(r => r['날짜'] === d)));
-    h += '<div class="bars">' + bars('날짜별 현장 입장', m, RDAYS.map(d => RDN[d]));
+    h += '<div class="bars">' + bars('날짜별 현장 등록', m, RDAYS.map(d => RDN[d]));
   } else {
     const m = {}; reg.forEach(r => { const k = String(r['입력시각']).slice(11, 13) + '시'; m[k] = (m[k] || 0) + rN(r['인원']); });
-    h += '<div class="bars">' + bars(RDN[REGD] + ' 시간대별 입장 (입력 시각 기준)', m, Object.keys(m).sort());
+    h += '<div class="bars">' + bars(RDN[REGD] + ' 시간대별 등록 (입력 시각 기준)', m, Object.keys(m).sort());
   }
   h += '</div>';
   ['단체', '선수단'].forEach(k => {
@@ -575,7 +575,7 @@ function regBoard(){
     const names = pl.map(p => p['이름']);
     const extra = {}; reg.filter(r => r['구분'] === k && !names.includes(r['이름'])).forEach(r => extra[r['이름']] = (extra[r['이름']] || 0) + rN(r['인원']));
     if (!pl.length && !Object.keys(extra).length) return;
-    h += `<div class="clist" style="margin-top:12px"><div class="lhead">${k === '단체' ? '🚌 단체별' : '🏆 경진대회별'}<span>✅ 도착 · 입장 / 신청</span></div>`;
+    h += `<div class="clist" style="margin-top:12px"><div class="lhead">${k === '단체' ? '🚌 단체별' : '🏆 경진대회별'}<span>✅ 도착 · 등록 / 신청</span></div>`;
     pl.forEach(p => {
       const n = rSum(reg.filter(r => r['구분'] === k && r['이름'] === p['이름']));
       h += `<div class="crow ${n ? 'ok' : ''}" style="cursor:default"><div class="cinfo"><div class="cname">${n ? '✅ ' : ''}${esc(p['이름'])}</div><div class="crole">${p['날짜'] ? RDN[p['날짜']] || esc(p['날짜']) : '날짜 미정'} · ${esc(p['비고'])}</div></div><div class="gnum"><b>${n}</b>/ ${rN(p['인원'])}명</div></div>`;
@@ -587,9 +587,9 @@ function regBoard(){
 }
 function issCard(){
   const L = D.iss || [], g = d => L.find(r => r['날짜'] === d) || {}, t = g('전체');
-  let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 발급(사전등록) 수 · 고벤트 등록시스템 기준</div>';
+  let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 등록 수 · 고벤트 등록시스템 기준 (사전 + 현장)</div>';
   if (!L.length) return h + '<div class="sub"><span>아직 받은 값이 없어요 (고벤트 연결 전)</span></div></div>';
-  h += `<div class="big">${rN(t['합계']).toLocaleString()}<small>건 발급</small></div><div class="sub"><span>사전 ${rN(t['사전']).toLocaleString()}</span><span>현장 ${rN(t['현장']).toLocaleString()}</span></div>`;
+  h += `<div class="big">${rN(t['합계']).toLocaleString()}<small>명 등록</small></div><div class="sub"><span>사전 ${rN(t['사전']).toLocaleString()}</span><span>현장 ${rN(t['현장']).toLocaleString()}</span></div>`;
   h += '<div class="sub" style="margin-top:6px">' + RDAYS.map(d => `<span>${RDN[d]} ${rN(g(d)['합계']).toLocaleString()}</span>`).join('') + '</div>';
   return h + `<div class="sub" style="margin-top:6px"><span>갱신 ${esc(t['갱신시각'] || '')} · ${esc(t['출처'] || '')}</span></div></div>`;
 }
@@ -599,11 +599,11 @@ function regIn(){
     <label style="margin-top:0">구분</label><div class="seg" id="rkind">${RK.map(k => `<button type="button" class="${k===RIK?'on':''}" onclick="rKind('${k}')">${k}</button>`).join('')}</div>
     <label>날짜</label><select id="rday" onchange="rKind(RIK, true)">${RDAYS.map(d => `<option value="${d}" ${d===d0?'selected':''}>${RDN[d]}</option>`).join('')}</select>
     <div id="rnameBox"></div>
-    <label>입장 인원</label>
+    <label>등록 인원</label>
     <div class="cnt"><button type="button" onclick="rAdd(-1)">−</button><input id="rn" type="number" inputmode="numeric" min="1" placeholder="0"><button type="button" onclick="rAdd(1)">＋</button></div>
     <div class="qadd"><button type="button" onclick="rAdd(5)">+5</button><button type="button" onclick="rAdd(10)">+10</button><button type="button" onclick="rAdd(50)">+50</button><button type="button" onclick="$('#rn').value=''">지우기</button></div>
     <label>메모 (선택)</label><input id="rnote" placeholder="예: 인솔교사 2명 포함">
-    <p></p><button class="btn full" id="rsave" onclick="saveReg()">입장 ${'수'} 저장</button>
+    <p></p><button class="btn full" id="rsave" onclick="saveReg()">등록 ${'수'} 저장</button>
     <p class="muted" style="margin:8px 2px 0">입력자: ${esc(ME || '')} · 잘못 넣었으면 관리자에게 말해 주세요</p>
   </div><div class="clist"><div class="lhead">최근 입력<span id="rlistDay"></span></div><div id="rlist"></div></div>`;
 }
@@ -630,7 +630,7 @@ function rHint(){
   const p = (D.plan || []).find(r => r['구분'] === RIK && r['이름'] === s.value);
   if (!p) { $('#rhint').innerHTML = ''; return; }
   const got = rSum((D.reg || []).filter(r => r['구분'] === RIK && r['이름'] === p['이름'])), left = rN(p['인원']) - got;
-  $('#rhint').innerHTML = `<div class="ghint">신청 ${rN(p['인원'])}명 · 지금까지 입장 ${got}명${left > 0 ? ` · <a href="#" style="color:#7dd3fc;font-weight:800" onclick="$('#rn').value=${left};return false">남은 ${left}명 넣기</a>` : ''}<br><span class="muted">${esc(p['비고'])}</span></div>`;
+  $('#rhint').innerHTML = `<div class="ghint">신청 ${rN(p['인원'])}명 · 지금까지 등록 ${got}명${left > 0 ? ` · <a href="#" style="color:#7dd3fc;font-weight:800" onclick="$('#rn').value=${left};return false">남은 ${left}명 넣기</a>` : ''}<br><span class="muted">${esc(p['비고'])}</span></div>`;
 }
 function rAdd(n){ const i = $('#rn'); i.value = Math.max(0, rN(i.value) + n) || ''; }
 function regList(){
@@ -652,7 +652,7 @@ async function saveReg(){
     toast('✅ ' + (name || RIK) + ' ' + n + '명 저장');
     $('#rn').value = ''; $('#rnote').value = ''; rHint(); regList();
   } catch (e) { toast('❌ ' + (e.message || '저장 실패')); }
-  btn.disabled = false; btn.textContent = '입장 수 저장';
+  btn.disabled = false; btn.textContent = '등록 수 저장';
 }
 async function rDel(id, b){
   if (RDEL !== id) { RDEL = id; regList(); return; }
