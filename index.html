@@ -546,6 +546,7 @@ function regBoard(){
   const reg = (D.reg || []).filter(f), plan = D.plan || [];
   const by = k => reg.filter(r => r['구분'] === k);
   let h = '<div class="filters">' + ['전체'].concat(RDAYS).map(d => `<button class="${REGD===d?'on':''}" onclick="REGD='${d}';render()">${d==='전체'?'전체 기간':RDN[d]}<b>${rSum((D.reg||[]).filter(r => d==='전체' || r['날짜']===d))}</b></button>`).join('') + '</div>';
+  h += issCard();
   h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 입장 (등록데스크 입력)</div><div class="big">${rSum(reg).toLocaleString()}<small>명</small></div>
     <div class="sub">${RK.map(k => `<span>${k} ${rSum(by(k)).toLocaleString()}</span>`).join('')}</div></div><div class="rgrid">`;
   RK.forEach(k => {
@@ -583,6 +584,14 @@ function regBoard(){
     h += '</div>';
   });
   return h;
+}
+function issCard(){
+  const L = D.iss || [], g = d => L.find(r => r['날짜'] === d) || {}, t = g('전체');
+  let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 발급(사전등록) 수 · 고벤트 등록시스템 기준</div>';
+  if (!L.length) return h + '<div class="sub"><span>아직 받은 값이 없어요 (고벤트 연결 전)</span></div></div>';
+  h += `<div class="big">${rN(t['합계']).toLocaleString()}<small>건 발급</small></div><div class="sub"><span>사전 ${rN(t['사전']).toLocaleString()}</span><span>현장 ${rN(t['현장']).toLocaleString()}</span></div>`;
+  h += '<div class="sub" style="margin-top:6px">' + RDAYS.map(d => `<span>${RDN[d]} ${rN(g(d)['합계']).toLocaleString()}</span>`).join('') + '</div>';
+  return h + `<div class="sub" style="margin-top:6px"><span>갱신 ${esc(t['갱신시각'] || '')} · ${esc(t['출처'] || '')}</span></div></div>`;
 }
 function regIn(){
   const d0 = rToday();
