@@ -547,17 +547,17 @@ function regBoard(){
   const by = k => reg.filter(r => r['구분'] === k);
   let h = '<div class="filters">' + ['전체'].concat(RDAYS).map(d => `<button class="${REGD===d?'on':''}" onclick="REGD='${d}';render()">${d==='전체'?'전체 기간':RDN[d]}<b>${issN(d, '합계').toLocaleString()}</b></button>`).join('') + '</div>';
   h += issCard();
-  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 등록 · 고벤트 기준</div><div class="big">${issN(REGD, '현장').toLocaleString()}<small>명</small></div>
+  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 등록</div><div class="big">${issN(REGD, '현장').toLocaleString()}<small>명</small></div>
     <div class="sub"><span>등록데스크 입력 ${rSum(reg).toLocaleString()}명</span></div></div><div class="rgrid">`;
   RK.forEach(k => {
     const pl = plan.filter(r => r['구분'] === k && (k === '일반' || f(r))), pre = rSum(pl);
     const ic = { 일반: '🙋', 단체: '🚌', 선수단: '🏆' }[k];
-    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}</h3><div class="big">${pre.toLocaleString()}<small>명 신청</small></div><div class="vs">고벤트 구분 없음${k === '일반' ? ' · 사전등록 기준' : ''}</div></div>`;
+    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}</h3><div class="big">${pre.toLocaleString()}<small>명 신청</small></div></div>`;
   });
   h += '</div>';
   if (REGD === '전체') {
     const m = {}; RDAYS.forEach(d => m[RDN[d]] = issN(d, '합계'));
-    h += '<div class="bars">' + bars('날짜별 등록 (고벤트 합계)', m, RDAYS.map(d => RDN[d]));
+    h += '<div class="bars">' + bars('날짜별 등록', m, RDAYS.map(d => RDN[d]));
   } else {
     const m = {}; reg.forEach(r => { const k = String(r['입력시각']).slice(11, 13) + '시'; m[k] = (m[k] || 0) + rN(r['인원']); });
     h += '<div class="bars">' + bars(RDN[REGD] + ' 시간대별 등록 (입력 시각 기준)', m, Object.keys(m).sort());
@@ -568,10 +568,9 @@ function regBoard(){
     const names = pl.map(p => p['이름']);
     const extra = {}; reg.filter(r => r['구분'] === k && !names.includes(r['이름'])).forEach(r => extra[r['이름']] = (extra[r['이름']] || 0) + rN(r['인원']));
     if (!pl.length && !Object.keys(extra).length) return;
-    h += `<div class="clist" style="margin-top:12px"><div class="lhead">${k === '단체' ? '🚌 단체별' : '🏆 경진대회별'}<span>✅ 도착 · 등록 / 신청</span></div>`;
+    h += `<div class="clist" style="margin-top:12px"><div class="lhead">${k === '단체' ? '🚌 단체별' : '🏆 경진대회별'}<span>신청 인원</span></div>`;
     pl.forEach(p => {
-      const n = rSum(reg.filter(r => r['구분'] === k && r['이름'] === p['이름']));
-      h += `<div class="crow ${n ? 'ok' : ''}" style="cursor:default"><div class="cinfo"><div class="cname">${n ? '✅ ' : ''}${esc(p['이름'])}</div><div class="crole">${p['날짜'] ? RDN[p['날짜']] || esc(p['날짜']) : '날짜 미정'} · ${esc(p['비고'])}</div></div><div class="gnum"><b>${n}</b>/ ${rN(p['인원'])}명</div></div>`;
+      h += `<div class="crow" style="cursor:default"><div class="cinfo"><div class="cname">${esc(p['이름'])}</div><div class="crole">${p['날짜'] ? RDN[p['날짜']] || esc(p['날짜']) : '날짜 미정'} · ${esc(p['비고'])}</div></div><div class="gnum"><b>${rN(p['인원']).toLocaleString()}명</b></div></div>`;
     });
     Object.keys(extra).forEach(nm => h += `<div class="crow ok" style="cursor:default"><div class="cinfo"><div class="cname">✅ ${esc(nm)}</div><div class="crole">신청 명단에 없음 (현장 입력)</div></div><div class="gnum"><b>${extra[nm]}</b>명</div></div>`);
     h += '</div>';
@@ -581,11 +580,11 @@ function regBoard(){
 function issN(d, k){ const r = (D.iss || []).find(x => x['날짜'] === d) || {}; return rN(r[k]); }
 function issCard(){
   const L = D.iss || [], g = d => L.find(r => r['날짜'] === d) || {}, t = g('전체');
-  let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 등록 수 · 고벤트 등록시스템 기준 (사전 + 현장)</div>';
-  if (!L.length) return h + '<div class="sub"><span>아직 받은 값이 없어요 (고벤트 연결 전)</span></div></div>';
+  let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 등록 수 (사전 + 현장)</div>';
+  if (!L.length) return h + '<div class="sub"><span>아직 받은 값이 없어요</span></div></div>';
   h += `<div class="big">${rN(t['합계']).toLocaleString()}<small>명 등록</small></div><div class="sub"><span>사전 ${rN(t['사전']).toLocaleString()}</span><span>현장 ${rN(t['현장']).toLocaleString()}</span></div>`;
   h += '<div class="sub" style="margin-top:6px">' + RDAYS.map(d => `<span>${RDN[d]} ${rN(g(d)['합계']).toLocaleString()}</span>`).join('') + '</div>';
-  return h + `<div class="sub" style="margin-top:6px"><span>갱신 ${esc(t['갱신시각'] || '')} · ${esc(t['출처'] || '')}</span></div></div>`;
+  return h + `<div class="sub" style="margin-top:6px"><span>갱신 ${esc(t['갱신시각'] || '')}</span></div></div>`;
 }
 function regIn(){
   const d0 = rToday();
