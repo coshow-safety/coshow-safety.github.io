@@ -545,26 +545,19 @@ function regBoard(){
   const f = r => REGD === '전체' || r['날짜'] === REGD;
   const reg = (D.reg || []).filter(f), plan = D.plan || [];
   const by = k => reg.filter(r => r['구분'] === k);
-  let h = '<div class="filters">' + ['전체'].concat(RDAYS).map(d => `<button class="${REGD===d?'on':''}" onclick="REGD='${d}';render()">${d==='전체'?'전체 기간':RDN[d]}<b>${rSum((D.reg||[]).filter(r => d==='전체' || r['날짜']===d))}</b></button>`).join('') + '</div>';
+  let h = '<div class="filters">' + ['전체'].concat(RDAYS).map(d => `<button class="${REGD===d?'on':''}" onclick="REGD='${d}';render()">${d==='전체'?'전체 기간':RDN[d]}<b>${issN(d, '합계').toLocaleString()}</b></button>`).join('') + '</div>';
   h += issCard();
-  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 등록 (등록데스크 입력)</div><div class="big">${rSum(reg).toLocaleString()}<small>명</small></div>
-    <div class="sub">${RK.map(k => `<span>${k} ${rSum(by(k)).toLocaleString()}</span>`).join('')}</div></div><div class="rgrid">`;
+  h += `<div class="rtot"><div class="t">🎫 ${REGD==='전체'?'전체 기간':RDN[REGD]} 현장 등록 · 고벤트 기준</div><div class="big">${issN(REGD, '현장').toLocaleString()}<small>명</small></div>
+    <div class="sub"><span>등록데스크 입력 ${rSum(reg).toLocaleString()}명</span></div></div><div class="rgrid">`;
   RK.forEach(k => {
-    const now = rSum(by(k)), pl = plan.filter(r => r['구분'] === k && (k === '일반' || f(r))), pre = rSum(pl);
+    const pl = plan.filter(r => r['구분'] === k && (k === '일반' || f(r))), pre = rSum(pl);
     const ic = { 일반: '🙋', 단체: '🚌', 선수단: '🏆' }[k];
-    let sub;
-    if (k === '일반') sub = `<div class="vs">사전등록 ${pre.toLocaleString()}명 <span class="muted">(${esc((pl[0]||{})['비고']||'')})</span></div>`;
-    else {
-      const ok = pl.filter(p => reg.some(r => r['구분'] === k && r['이름'] === p['이름'])).length;
-      const pc = pre ? Math.round(now / pre * 100) : 0;
-      sub = `<div class="pbar"><i style="width:${Math.min(100, pc)}%"></i></div><div class="vs">신청 ${pre.toLocaleString()}명 중 ${pc}% · 도착 ${ok}/${pl.length}${k==='단체'?'곳':'개 대회'}</div>`;
-    }
-    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}<span>${by(k).length}번 입력</span></h3><div class="big">${now.toLocaleString()}<small>명 등록</small></div>${sub}</div>`;
+    h += `<div class="rcard"><h3>${ic} ${k === '일반' ? '일반 참관객' : k === '단체' ? '단체 참관객' : '경진대회 선수단'}</h3><div class="big">${pre.toLocaleString()}<small>명 신청</small></div><div class="vs">고벤트 구분 없음${k === '일반' ? ' · 사전등록 기준' : ''}</div></div>`;
   });
   h += '</div>';
   if (REGD === '전체') {
-    const m = {}; RDAYS.forEach(d => m[RDN[d]] = rSum((D.reg||[]).filter(r => r['날짜'] === d)));
-    h += '<div class="bars">' + bars('날짜별 현장 등록', m, RDAYS.map(d => RDN[d]));
+    const m = {}; RDAYS.forEach(d => m[RDN[d]] = issN(d, '합계'));
+    h += '<div class="bars">' + bars('날짜별 등록 (고벤트 합계)', m, RDAYS.map(d => RDN[d]));
   } else {
     const m = {}; reg.forEach(r => { const k = String(r['입력시각']).slice(11, 13) + '시'; m[k] = (m[k] || 0) + rN(r['인원']); });
     h += '<div class="bars">' + bars(RDN[REGD] + ' 시간대별 등록 (입력 시각 기준)', m, Object.keys(m).sort());
@@ -585,6 +578,7 @@ function regBoard(){
   });
   return h;
 }
+function issN(d, k){ const r = (D.iss || []).find(x => x['날짜'] === d) || {}; return rN(r[k]); }
 function issCard(){
   const L = D.iss || [], g = d => L.find(r => r['날짜'] === d) || {}, t = g('전체');
   let h = '<div class="rtot" style="margin-bottom:12px"><div class="t">🧾 등록 수 · 고벤트 등록시스템 기준 (사전 + 현장)</div>';
